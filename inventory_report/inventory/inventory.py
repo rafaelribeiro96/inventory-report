@@ -1,32 +1,20 @@
-from importlib import import_module
-from pathlib import Path
+from inventory_report.reports.simple_report import SimpleReport
+from inventory_report.reports.complete_report import CompleteReport
+from inventory_report.importer.csv_importer import CsvImporter
+from inventory_report.importer.json_importer import JsonImporter
+from inventory_report.importer.xml_importer import XmlImporter
 
-
-INVALID_FILE = "Arquivo inválido!"
+report_types = {"simples": SimpleReport, "completo": CompleteReport}
 
 
 class Inventory:
-    importers = {
-        ".csv": "CsvImporter",
-        ".json": "JsonImporter",
-        ".xml": "XmlImporter"
-    }
-    report_types = {
-        "simples": "SimpleReport",
-        "completo": "CompleteReport"
-    }
-
     @classmethod
     def import_data(cls, path, type):
-        extension = Path(path).suffix
-        if extension not in cls.importers:
-            raise ValueError(INVALID_FILE)
+        if ".csv" in path:
+            content = CsvImporter.import_data(path)
+        elif ".json" in path:
+            content = JsonImporter.import_data(path)
+        else:
+            content = XmlImporter.import_data(path)
 
-        importer_module = import_module(
-            f"inventory_report.importer.{cls.importers[extension]}"
-        )
-        content = importer_module.Importer.import_data(path)
-        report_module = import_module(
-            f"inventory_report.reports.{cls.report_types[type]}"
-        )
-        return report_module.generate(content)
+        return report_types[type].generate(content)
